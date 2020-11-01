@@ -26,7 +26,7 @@ public class Compra implements Serializable {
     //TODO Criar uma classe para ter os detalhes da forma de pagamento
     private String formaPagamento;
 
-    private Double valorTotal;
+    private Double valorTotal=0.;
     //TODO Forma de entrega
 
 

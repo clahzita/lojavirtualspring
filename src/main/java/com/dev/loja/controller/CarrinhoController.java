@@ -1,5 +1,6 @@
 package com.dev.loja.controller;
 
+import com.dev.loja.model.Compra;
 import com.dev.loja.model.ItensCompra;
 import com.dev.loja.model.Produto;
 import com.dev.loja.repositories.ProdutoRepository;
@@ -18,30 +19,38 @@ import java.util.Optional;
 public class CarrinhoController {
 
     Map<Long, ItensCompra> itensCompra = new HashMap<>();
-
+    private final Compra compra = new Compra();
     @Autowired
     private ProdutoRepository produtoRepository;
+
+    //TODO colocar operações em camada de serviço
+    private void calcularTotal() {
+        itensCompra.values().forEach(i -> compra.setValorTotal(compra.getValorTotal() + i.getValorTotal()));
+
+    }
 
     @GetMapping("/carrinho")
     public ModelAndView exibirCarrinho() {
         ModelAndView mv = new ModelAndView("/cliente/carrinho");
+        mv.addObject("compra", compra);
         mv.addObject("listaItens", itensCompra.values());
         return mv;
     }
 
     @GetMapping("/adicionarCarrinho/{id}")
-    public ModelAndView adicionarCarrinho(@PathVariable Long id) {
+    public String adicionarCarrinho(@PathVariable Long id) {
         Optional<Produto> prod = produtoRepository.findById(id);
         Produto produto = prod.get();
 
         //TODO Verificar quantidade no estoque
-
-        ItensCompra item = new ItensCompra();
+        ItensCompra item;
         if (itensCompra.containsKey(produto.getId())) {
             item = itensCompra.get(produto.getId());
             incrementaQuantidade(item);
             itensCompra.replace(produto.getId(), item);
         } else {
+            item = new ItensCompra();
+            item.setCompra(compra);
             item.setProduto(produto);
             item.setValorUnitario(produto.getValorVenda());
             incrementaQuantidade(item);
@@ -49,38 +58,61 @@ public class CarrinhoController {
         }
 
         ArrayList<ItensCompra> listaItens = new ArrayList<ItensCompra>(itensCompra.values());
-        ModelAndView mv = new ModelAndView("/cliente/carrinho");
-        mv.addObject("listaItens", listaItens);
 
-        return mv;
+        return "redirect:/carrinho";
     }
 
     private void incrementaQuantidade(ItensCompra item) {
         item.setQuantidade(item.getQuantidade() + 1);
+        compra.setValorTotal(compra.getValorTotal() + item.getValorUnitario());
         item.setValorTotal(item.getQuantidade() * item.getValorUnitario());
     }
 
     private void decrementaQuantidade(ItensCompra item) {
-        item.setQuantidade(item.getQuantidade() - 1);
-        item.setValorTotal(item.getQuantidade() * item.getValorUnitario());
+        if (item.getQuantidade() == 1) {
+            removerProdutoCarrinho(item.getProduto().getId());
+        } else if (item.getQuantidade() > 1) {
+            item.setQuantidade(item.getQuantidade() - 1);
+            compra.setValorTotal(compra.getValorTotal() - item.getValorUnitario());
+            item.setValorTotal(item.getQuantidade() * item.getValorUnitario());
+        }
     }
 
     @GetMapping("/alterarQuantidade/{id}/{acao}")
-    public ModelAndView alterarQuantidade(@PathVariable Long id, @PathVariable Integer acao) {
+    public String alterarQuantidade(@PathVariable Long id, @PathVariable Integer acao) {
         ItensCompra item = itensCompra.get(id);
 
-        if(item != null){
-            if(acao == 0){
+        if (item != null) {
+            if (acao == 0) {
                 decrementaQuantidade(item);
-            }else if (acao==1){
+            } else if (acao == 1) {
                 incrementaQuantidade(item);
             }
-            itensCompra.replace(id,item);
+            itensCompra.replace(id, item);
         }
 
-        ModelAndView mv = new ModelAndView("/cliente/carrinho");
+        return "redirect:/carrinho";
+
+    }
+
+    @GetMapping("/removerProduto/{id}")
+    public String removerProdutoCarrinho(@PathVariable Long id) {
+
+        ItensCompra itemRemovido = itensCompra.remove(id);
+
+        compra.setValorTotal(compra.getValorTotal() - itemRemovido.getValorTotal());
+
+        return "redirect:/carrinho";
+    }
+
+    @GetMapping("/finalizar")
+    public ModelAndView finalizarCompra() throws Exception {
+        if(itensCompra.isEmpty()){
+            throw new Exception();
+        }
+        ModelAndView mv = new ModelAndView("/cliente/finalizar");
+        mv.addObject("compra", compra);
         mv.addObject("listaItens", itensCompra.values());
         return mv;
     }
-
 }
