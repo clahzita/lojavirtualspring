@@ -3,11 +3,11 @@ package com.dev.loja.controller;
 import com.dev.loja.model.Cliente;
 import com.dev.loja.model.Compra;
 import com.dev.loja.model.ItensCompra;
-import com.dev.loja.model.Produto;
 import com.dev.loja.repositories.ClienteRepository;
 import com.dev.loja.repositories.CompraRepository;
 import com.dev.loja.repositories.ItensCompraRepository;
 import com.dev.loja.repositories.ProdutoRepository;
+import com.dev.loja.service.CarrinhoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -18,17 +18,18 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.ModelAndView;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 @Controller
 public class CarrinhoController {
 
-    private Compra compra = new Compra();
     Map<Long, ItensCompra> itensCompra = new HashMap<>();
+    private Compra compra = new Compra();
     private Cliente cliente;
+
+    @Autowired
+    private CarrinhoService carrinhoService;
 
     @Autowired
     private ProdutoRepository produtoRepository;
@@ -61,43 +62,10 @@ public class CarrinhoController {
 
     @GetMapping("/adicionarCarrinho/{id}")
     public String adicionarCarrinho(@PathVariable Long id) {
-        Optional<Produto> prod = produtoRepository.findById(id);
-        Produto produto = prod.get();
 
-        //TODO Verificar quantidade no estoque
-        ItensCompra item;
-        if (itensCompra.containsKey(produto.getId())) {
-            item = itensCompra.get(produto.getId());
-            incrementaQuantidade(item);
-            itensCompra.replace(produto.getId(), item);
-        } else {
-            item = new ItensCompra();
-            item.setCompra(compra);
-            item.setProduto(produto);
-            item.setValorUnitario(produto.getValorVenda());
-            incrementaQuantidade(item);
-            itensCompra.put(produto.getId(), item);
-        }
-
-        ArrayList<ItensCompra> listaItens = new ArrayList<ItensCompra>(itensCompra.values());
+        carrinhoService.adcionarProdutoCarrinho(id, itensCompra, compra);
 
         return "redirect:/carrinho";
-    }
-
-    private void incrementaQuantidade(ItensCompra item) {
-        item.setQuantidade(item.getQuantidade() + 1);
-        compra.setValorTotal(compra.getValorTotal() + item.getValorUnitario());
-        item.setValorTotal(item.getQuantidade() * item.getValorUnitario());
-    }
-
-    private void decrementaQuantidade(ItensCompra item) {
-        if (item.getQuantidade() == 1) {
-            removerProdutoCarrinho(item.getProduto().getId());
-        } else if (item.getQuantidade() > 1) {
-            item.setQuantidade(item.getQuantidade() - 1);
-            compra.setValorTotal(compra.getValorTotal() - item.getValorUnitario());
-            item.setValorTotal(item.getQuantidade() * item.getValorUnitario());
-        }
     }
 
     @GetMapping("/alterarQuantidade/{id}/{acao}")
@@ -106,9 +74,13 @@ public class CarrinhoController {
 
         if (item != null) {
             if (acao == 0) {
-                decrementaQuantidade(item);
+                if (item.getQuantidade() == 1) {
+                    removerProdutoCarrinho(item.getProduto().getId());
+                } else if (item.getQuantidade() > 1) {
+                    carrinhoService.decrementaQuantidade(item, compra);
+                }
             } else if (acao == 1) {
-                incrementaQuantidade(item);
+                carrinhoService.incrementaQuantidade(item, compra);
             }
             itensCompra.replace(id, item);
         }
@@ -120,9 +92,7 @@ public class CarrinhoController {
     @GetMapping("/removerProduto/{id}")
     public String removerProdutoCarrinho(@PathVariable Long id) {
 
-        ItensCompra itemRemovido = itensCompra.remove(id);
-
-        compra.setValorTotal(compra.getValorTotal() - itemRemovido.getValorTotal());
+        carrinhoService.removerProdutoCarrinho(id, itensCompra, compra);
 
         return "redirect:/carrinho";
     }
