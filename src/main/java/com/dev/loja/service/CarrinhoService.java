@@ -1,15 +1,14 @@
 package com.dev.loja.service;
 
+import com.dev.loja.model.Cliente;
 import com.dev.loja.model.Compra;
 import com.dev.loja.model.ItensCompra;
 import com.dev.loja.model.Produto;
-import com.dev.loja.repositories.ClienteRepository;
-import com.dev.loja.repositories.CompraRepository;
-import com.dev.loja.repositories.ItensCompraRepository;
-import com.dev.loja.repositories.ProdutoRepository;
+import com.dev.loja.repositories.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 
@@ -27,6 +26,9 @@ public class CarrinhoService {
 
     @Autowired
     private ItensCompraRepository itensCompraRepository;
+
+    @Autowired
+    private CartaoFidelidadeRepository cartaoFidelidadeRepository;
 
     public void adcionarProdutoCarrinho(Long produtoId, Map<Long, ItensCompra> itensCompra, Compra compra) {
         Optional<Produto> prod = produtoRepository.findById(produtoId);
@@ -63,5 +65,18 @@ public class CarrinhoService {
     public void removerProdutoCarrinho(Long produtoId, Map<Long, ItensCompra> itensCompra, Compra compra) {
         ItensCompra itemRemovido = itensCompra.remove(produtoId);
         compra.setValorTotal(compra.getValorTotal() - itemRemovido.getValorTotal());
+    }
+
+    public void confirmaCompra(Compra compra, Collection<ItensCompra> listaItensCompra) {
+        compraRepository.saveAndFlush(compra);
+        itensCompraRepository.saveAll(listaItensCompra);
+        atualizaPontosFidelidade(compra.getCliente(), compra.getValorTotal());
+    }
+
+    public void atualizaPontosFidelidade(Cliente cliente, Double valorTotal) {
+        Integer pontosAtual = cliente.getCartaoFidelidade().getPontos();
+        Integer pontosGanho= (int) Math.floor(valorTotal /50);
+        cliente.getCartaoFidelidade().setPontos(pontosAtual+pontosGanho);
+        cartaoFidelidadeRepository.saveAndFlush(cliente.getCartaoFidelidade());
     }
 }

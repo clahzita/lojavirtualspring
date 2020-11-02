@@ -18,6 +18,8 @@
 </div>
 <div class="col-12">
     <h1>Sua compra foi efetuada com sucesso!</h1>
+    <h2>Você tem um total de </h2><span th:text="${cliente.cartaoFidelidade?.pontos}"></span>
+    <h2>. Parabéns!!</h2>
     <a href="/">Voltar para a Página Inicial</a>
 </div>
 

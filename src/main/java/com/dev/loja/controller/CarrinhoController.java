@@ -46,12 +46,6 @@ public class CarrinhoController {
     public CarrinhoController() {
     }
 
-    //TODO colocar operações em camada de serviço
-    private void calcularTotal() {
-        itensCompra.values().forEach(i -> compra.setValorTotal(compra.getValorTotal() + i.getValorTotal()));
-
-    }
-
     @GetMapping("/carrinho")
     public ModelAndView exibirCarrinho() {
         ModelAndView mv = new ModelAndView("/cliente/carrinho");
@@ -97,7 +91,7 @@ public class CarrinhoController {
         return "redirect:/carrinho";
     }
 
-    private void buscarUsuarioAutenticao() {
+    private void buscarUsuarioAutenticado() {
         Authentication autenticado = SecurityContextHolder.getContext().getAuthentication();
         if (!(autenticado instanceof AnonymousAuthenticationToken)) {
             String email = autenticado.getName();
@@ -109,7 +103,7 @@ public class CarrinhoController {
 
     @GetMapping("/finalizar")
     public ModelAndView finalizarCompra() throws Exception {
-        buscarUsuarioAutenticao();
+        buscarUsuarioAutenticado();
         if (itensCompra.isEmpty()) {
             throw new Exception();
         }
@@ -123,10 +117,11 @@ public class CarrinhoController {
     @PostMapping("/finalizar/confirmar")
     public ModelAndView confirmarCompra(String formaPagamento) {
         ModelAndView mv = new ModelAndView("cliente/compraFinalizada");
+
         compra.setCliente(cliente);
         compra.setFormaPagamento(formaPagamento);
-        compraRepository.saveAndFlush(compra);
-        itensCompraRepository.saveAll(itensCompra.values());
+        carrinhoService.confirmaCompra(compra,itensCompra.values());
+
         mv.addObject("cliente", cliente);
         itensCompra = new HashMap<>();
         compra = new Compra();

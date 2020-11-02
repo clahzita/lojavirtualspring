@@ -20,6 +20,7 @@
     </div>
     <div class="col-12">
         <h1>Sua compra foi efetuada com sucesso!</h1>
+        <h2>Você tem um total de <span th:text="${cliente.cartaoFidelidade?.pontos}"></span> pontos. Parabéns!!</h2>
         <a href="/">Voltar para a Página Inicial</a>
     </div>
 </div>

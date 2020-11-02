@@ -1,6 +1,8 @@
 package com.dev.loja.controller;
 
+import com.dev.loja.model.CartaoFidelidade;
 import com.dev.loja.model.Cliente;
+import com.dev.loja.repositories.CartaoFidelidadeRepository;
 import com.dev.loja.repositories.CidadeRepository;
 import com.dev.loja.repositories.ClienteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +22,9 @@ public class ClienteController {
 
     @Autowired
     private ClienteRepository clienteRepository;
+
+    @Autowired
+    private CartaoFidelidadeRepository cartaoFidelidadeRepository;
 
     @Autowired
     private CidadeRepository cidadeRepository;
@@ -51,8 +56,15 @@ public class ClienteController {
         if (result.hasErrors()) {
             return cadastrar(cliente);
         }
-
+        //TODO verificar se está ou não editando a senha
         cliente.setSenha(new BCryptPasswordEncoder().encode(cliente.getSenha()));
+
+        if(cliente.getId() == null){
+            CartaoFidelidade cartao = new CartaoFidelidade();
+            cartao.setCliente(cliente);
+            cliente.setCartaoFidelidade(cartao);
+            cartao = cartaoFidelidadeRepository.save(cartao);
+        }
 
         clienteRepository.saveAndFlush(cliente);
 

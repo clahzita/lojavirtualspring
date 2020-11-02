@@ -21,6 +21,9 @@ public class Cliente implements Serializable {
     private String email;
     private String senha;
 
+    @OneToOne(cascade = CascadeType.PERSIST) @JoinColumn( name = "cartaoFidelidade_id" )
+    private CartaoFidelidade cartaoFidelidade;
+
     public Cliente() {
         super();
     }
@@ -71,5 +74,13 @@ public class Cliente implements Serializable {
 
     public void setSenha(String senha) {
         this.senha = senha;
+    }
+
+    public CartaoFidelidade getCartaoFidelidade() {
+        return cartaoFidelidade;
+    }
+
+    public void setCartaoFidelidade(CartaoFidelidade cartaoFidelidade) {
+        this.cartaoFidelidade = cartaoFidelidade;
     }
 }
