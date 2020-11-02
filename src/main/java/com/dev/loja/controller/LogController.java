@@ -18,9 +18,16 @@ import java.util.Optional;
 public class LogController {
 
 
-    @GetMapping("/negado")
-    public ModelAndView negarAcesso(){
-        ModelAndView mv = new ModelAndView("/negado");
+    @GetMapping("/negadoAdministrativo")
+    public ModelAndView negarAcessoAdministrativo(){
+        ModelAndView mv = new ModelAndView("/negadoAdministrativo");
+
+        return mv;
+    }
+
+    @GetMapping("/negadoCliente")
+    public ModelAndView negarAcessoCliente(){
+        ModelAndView mv = new ModelAndView("/negadoCliente");
 
         return mv;
     }

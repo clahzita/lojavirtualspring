@@ -13,10 +13,14 @@ public class Cliente implements Serializable {
     private Long id;
     private String nome;
     private String cpf;
+
     @ManyToOne
     private Cidade cidade;
-    //TODO Senha deve ser enviada para e-mail do funcionario, como recuperar senha
+
+    //TODO Senha deve ser enviada para e-mail do usuario, como recuperar senha
+    private String email;
     private String senha;
+
     public Cliente() {
         super();
     }
@@ -51,6 +55,14 @@ public class Cliente implements Serializable {
 
     public void setCidade(Cidade cidade) {
         this.cidade = cidade;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public String getSenha() {

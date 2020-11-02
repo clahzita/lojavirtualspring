@@ -1,16 +1,25 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml"
-	xmlns:th="http://www.thymeleaf.org">
+      xmlns:th="http://www.thymeleaf.org">
 <head>
-<meta charset="UTF-8" />
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-<meta name="viewport" content="width=device-width" />
-<title>Login</title>
+    <meta charset="UTF-8"/>
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type"/>
+    <meta content="width=device-width" name="viewport"/>
+    <title>Login</title>
 
 </head>
 
 <body>
-	<h1>Compra Efetuada com sucesso</h1>
-	<a href="/">Voltar para a Página Inicial</a>
+<div class="col-12">
+    <h3>
+        <span th:text="${cliente.nome}"></span>
+    </h3>
+
+</div>
+<div class="col-12">
+    <h1>Sua compra foi efetuada com sucesso!</h1>
+    <a href="/">Voltar para a Página Inicial</a>
+</div>
+
 </body>
 </html>
